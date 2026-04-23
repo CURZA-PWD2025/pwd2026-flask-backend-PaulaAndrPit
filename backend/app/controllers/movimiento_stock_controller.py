@@ -12,15 +12,24 @@ class MovimientoStockController (Controller):
         movimientos_list = db.session.execute(db.select(MovimientoStock).order_by(db.desc(MovimientoStock.id))).scalars().all()
         if len(movimientos_list) > 0:
             movimientos_to_dict = [movimiento.to_dict() for movimiento in movimientos_list ]
-            return jsonify(movimientos_to_dict, 200), 200 
-        return jsonify({"message": 'movimiento no encontrado'}, 404), 404
+            return jsonify(movimientos_to_dict), 200 
+        return jsonify({"message": 'movimiento no encontrado'}), 404
+    
+    @staticmethod
+    def get_by_user(user_id) -> tuple[Response, int]:
+        movimientos_list = db.session.execute(db.select(MovimientoStock).filter_by(user_id=user_id).order_by(db.desc(MovimientoStock.id))).scalars().all()
+    
+        if len(movimientos_list) > 0:
+            movimientos_to_dict = [movimiento.to_dict() for movimiento in movimientos_list]
+            return jsonify(movimientos_to_dict), 200
+        return jsonify({"message": 'No se encontraron movimientos para este usuario'}), 404
     
     @staticmethod
     def show(id)->tuple[Response, int]:
         movimiento = db.session.get(MovimientoStock, id)
         if movimiento:
-            return jsonify(movimiento.to_dict(),200), 200
-        return jsonify({"message": 'movimiento no encontrado'}, 404), 404
+            return jsonify(movimiento.to_dict()), 200
+        return jsonify({"message": 'movimiento no encontrado'}), 404
     
     @staticmethod
     def create(request) -> tuple[Response, int]:            

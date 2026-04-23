@@ -21,18 +21,21 @@ def get_one(id):
 
 
 @producto_bp.route("/", methods=["POST"])
+@jwt_required()
 @rol_access("admin")
 def create():
     return ProductoController.create()
 
 
 @producto_bp.route("/<int:id>", methods=["PUT"])
+@jwt_required()
 @rol_access("admin")
 def update(id):
     return ProductoController.update(id)
 
 
 @producto_bp.route("/<int:id>", methods=["DELETE"])
+@jwt_required()
 @rol_access("admin")
 def delete(id):
     return ProductoController.delete(id)

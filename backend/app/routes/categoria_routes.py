@@ -22,6 +22,7 @@ def get_one(id):
 
 
 @categoria_bp.route("/", methods=["POST"])
+@jwt_required()
 @rol_access("admin")
 def create():
     return CategoriaController.create()
@@ -29,6 +30,7 @@ def create():
 
 
 @categoria_bp.route("/<int:id>", methods=["PUT"])
+@jwt_required()
 @rol_access("admin")
 def update(id):
     return CategoriaController.update(id)
@@ -36,6 +38,7 @@ def update(id):
 
 
 @categoria_bp.route("/<int:id>", methods=["DELETE"])
+@jwt_required()
 @rol_access("admin")
 def delete(id):
     return CategoriaController.delete(id)

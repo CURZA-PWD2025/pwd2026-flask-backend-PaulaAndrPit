@@ -36,6 +36,8 @@ class Producto(BaseModel):
             'descripcion': self.descripcion,
             'precio_costo': self.precio_costo,
             'precio_venta': self.precio_venta,
+            'stock_actual': self.stock_actual,
+            'stock_minimo': self.stock_minimo,
             'categoria_id': self.categoria_id,
             'proveedor_id': self.proveedor_id,
             'activo': self.activo,
