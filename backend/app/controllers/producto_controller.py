@@ -67,45 +67,43 @@ class ProductoController (Controller):
         
         
     @staticmethod
-    def update(request, id)->tuple[Response, int]:
-        nombre:str = request.get('nombre')
-        descripcion:str = request.get('descripcion')
+    def update(request, id) -> tuple[Response, int]:
+        nombre: str = request.get('nombre')
+        descripcion: str = request.get('descripcion')
         precio_costo: float = request.get('precio_costo')
         precio_venta: float = request.get('precio_venta')
         stock_actual: int = request.get('stock_actual')
         stock_minimo: int = request.get('stock_minimo')
         categoria_id: int = request.get('categoria_id')
         proveedor_id: int = request.get('proveedor_id')
-        error :str | None = None
+
         if nombre is None:
-            error = 'El nombre es requerido'
+            return jsonify({'message': 'El nombre es requerido'}), 422
         if precio_costo is None:
-            error = 'El precio de costo es requerido'
+            return jsonify({'message': 'El precio de costo es requerido'}), 422
         if precio_venta is None:
-            error = 'El precio de venta es requerido'
+            return jsonify({'message': 'El precio de venta es requerido'}), 422
         if categoria_id is None:
-            error = 'La categoría es requerida'
-            
-        if error is None:
-            producto = db.session.get(Producto, id)
-            if producto:
-                try:
-                    producto.nombre = nombre
-                    producto.descripcion = descripcion
-                    producto.precio_costo = precio_costo
-                    producto.precio_venta = precio_venta
-                    producto.stock_actual = stock_actual
-                    producto.stock_minimo = stock_minimo
-                    producto.categoria_id = categoria_id
-                    producto.proveedor_id = proveedor_id
-                    db.session.commit()
-                    return jsonify({'message':'producto modificado con exito'}, 200), 200
-                except IntegrityError:
-                    db.session.rollback()
-                    return jsonify({'message': "Producto ya registrado"}, 409), 409
-            #else:
-            #    error = 'Producto no encontrado'
-        return jsonify({'message':error}, 404), 404
+            return jsonify({'message': 'La categoría es requerida'}), 422
+
+        producto = db.session.get(Producto, id)
+        if producto is None:
+            return jsonify({'message': 'Producto no encontrado'}), 404
+
+        try:
+            producto.nombre = nombre
+            producto.descripcion = descripcion
+            producto.precio_costo = precio_costo
+            producto.precio_venta = precio_venta
+            producto.stock_actual = stock_actual
+            producto.stock_minimo = stock_minimo
+            producto.categoria_id = categoria_id
+            producto.proveedor_id = proveedor_id
+            db.session.commit()
+            return jsonify({'message': 'Producto modificado con exito'}), 200
+        except IntegrityError:
+            db.session.rollback()
+            return jsonify({'message': 'Producto ya registrado'}), 409  
         
     @staticmethod
     def destroy(id) -> tuple[Response, int]:
@@ -114,7 +112,7 @@ class ProductoController (Controller):
         if producto and len(producto.categorias) == 0:
             db.session.delete(producto)
             db.session.commit()
-            return jsonify({'message':'el producto fue eliminado con exito'}, 200), 200
+            return jsonify({'message':'el producto fue eliminado con exito'}), 200
         else:
-            error = 'producto no encontrado'
-        return jsonify({'message':error},404), 404
+            error = jsonify({'message': 'producto no encontrado'}), 404
+        return error

@@ -15,6 +15,7 @@ class MovimientoStockController (Controller):
             return jsonify(movimientos_to_dict, 200), 200 
         return jsonify({"message": 'movimiento no encontrado'}, 404), 404
     
+    @staticmethod
     def show(id)->tuple[Response, int]:
         movimiento = db.session.get(MovimientoStock, id)
         if movimiento:
@@ -22,45 +23,46 @@ class MovimientoStockController (Controller):
         return jsonify({"message": 'movimiento no encontrado'}, 404), 404
     
     @staticmethod
-    def create(request) -> tuple[Response, int]:        
-        tipo_movimiento:str = request.get('tipo_movimiento')
+    def create(request) -> tuple[Response, int]:            
+        tipo_movimiento: str = request.get('tipo_movimiento')
         cantidad: int = request.get('cantidad')
         motivo: str = request.get('motivo')
         producto_id: int = request.get('producto_id')
         user_id: int = request.get('user_id')
-        
-        error :str | None = None
+    
+    
         if tipo_movimiento is None:
-            error = 'El tipo de movimiento es requerido'
-        elif tipo_movimiento not in ['entrada', 'salida']:
-            error = 'El tipo de movimiento debe ser "entrada" o "salida"'
+            return jsonify({'message': 'El tipo de movimiento es requerido'}), 422
+        if tipo_movimiento not in ['entrada', 'salida']:
+            return jsonify({'message': 'El tipo de movimiento debe ser "entrada" o "salida"'}), 422
         if cantidad is None:
-            error = 'La cantidad es requerida'
-        elif cantidad <= 0:
-            error = 'La cantidad debe ser mayor a cero'
+            return jsonify({'message': 'La cantidad es requerida'}), 422
+        if cantidad <= 0:
+            return jsonify({'message': 'La cantidad debe ser mayor a cero'}), 422
         if producto_id is None:
-            error = 'El producto es requerido'
-        
-        if error is None:
-            producto = db.session.get(Producto, producto_id)
-            if producto:
-                try:
-                    movimiento_stock = MovimientoStock(tipo_movimiento=tipo_movimiento, cantidad=cantidad, motivo=motivo, producto_id=producto_id, user_id=user_id)
-                    db.session.add(movimiento_stock)
-                    if tipo_movimiento == 'entrada':
-                        producto.stock_actual += cantidad
-                    else:
-                        if producto.stock_actual < cantidad:
-                            return jsonify({'message': 'No hay suficiente stock para realizar la salida'}), 400
-                        producto.stock_actual -= cantidad
-                    db.session.commit()
-                    return jsonify({'message':'movimiento registrado con exito'}, 200), 200
-                except IntegrityError:
-                    db.session.rollback()
-                    return jsonify({'message': "Error al registrar el movimiento"}, 409), 409
+            return jsonify({'message': 'El producto es requerido'}), 422
+
+        producto = db.session.get(Producto, producto_id)
+        if producto is None:
+            return jsonify({'message': 'Producto no encontrado'}), 404
+
+        try:
+            movimiento_stock = MovimientoStock(tipo_movimiento=tipo_movimiento,cantidad=cantidad,motivo=motivo,producto_id=producto_id,user_id=user_id)
+            db.session.add(movimiento_stock)
+
+            if tipo_movimiento == 'entrada':
+                producto.stock_actual += cantidad
             else:
-                error = 'Producto no encontrado'
-        return jsonify({'message':error}, 404), 404
+                if producto.stock_actual < cantidad:
+                    return jsonify({'message': 'No hay suficiente stock para realizar la salida'}), 400
+                producto.stock_actual -= cantidad
+
+            db.session.commit()
+            return jsonify({'message': 'Movimiento registrado con exito'}), 200
+
+        except IntegrityError:
+            db.session.rollback()
+            return jsonify({'message': 'Error al registrar el movimiento'}), 409
     
     @staticmethod
     def destroy(id) -> tuple[Response, int]:
@@ -69,7 +71,7 @@ class MovimientoStockController (Controller):
         if movimiento:
             db.session.delete(movimiento)
             db.session.commit()
-            return jsonify({'message':'el movimiento fue eliminado con exito'}, 200), 200
+            return jsonify({'message':'el movimiento fue eliminado con exito'}), 200
         else:
-            error = 'movimiento no encontrado'
-        return jsonify({'message':error},404), 404
+            error = jsonify({'message': 'movimiento no encontrado'}), 404
+        return error

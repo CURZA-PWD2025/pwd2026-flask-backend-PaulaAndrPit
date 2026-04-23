@@ -10,15 +10,16 @@ class User(db.Model):
     rol_id = db.Column(db.Integer, db.ForeignKey('roles.id'),)
     password = db.Column(db.String(255) )
     rol = db.relationship('Rol')
-    activo = db.Column(db.String(1), default = 'S')
+    activo = db.Column(db.Boolean, default = True)
     created_at = db.Column(db.DateTime, server_default = db.func.now())
     updated_at = db.Column(db.DateTime, onupdate = db.func.now())
     
-    def __init__(self, nombre:str, email:str, password:str, rol_id:int = 1) -> None:
+    def __init__(self, nombre:str, email:str, password=None, rol_id:int = 1) -> None:
       self.nombre = nombre
       self.email = email
       self.rol_id = rol_id
-      self.password = password
+      if password:
+        self.generate_password(password)
     
     def __repr__(self):
        return f"usuario {self.nombre}, email {self.email} , fecha de creacion {self.created_at} " 
@@ -30,6 +31,7 @@ class User(db.Model):
         'email':self.email,
         'created_at':self.created_at,
         'updated_at': self.updated_at,
+        'activo': self.activo,
         'rol': self.rol.to_dict() if self.rol else None
       }
       

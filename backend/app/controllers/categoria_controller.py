@@ -32,9 +32,9 @@ class CategoriaController (Controller):
         descripcion = request[('descripcion')]
         error :str | None = None
         if nombre is None:
-            error = 'El nombre es requerido'
+            error = jsonify({'message': 'El nombre es requerido'}), 422
         if descripcion is None:
-            error = 'La descripción es requerida'
+            error = jsonify({'message': 'La descripción es requerida'}), 422
             
         if error is None:
             try:
@@ -45,34 +45,32 @@ class CategoriaController (Controller):
             except IntegrityError:
                 db.session.rollback()
                 return jsonify({'message': "Categoria ya registrada"}, 409), 409
-        return jsonify ({'message': error}, 422), 422
+        return error
         
         
     @staticmethod
-    def update(request, id)->tuple[Response, int]:
-        nombre:str = request.get('nombre')
-        descripcion:str = request.get('descripcion')
-        error :str | None = None
+    def update(request, id) -> tuple[Response, int]:
+        nombre: str = request.get('nombre')
+        descripcion: str = request.get('descripcion')
+
         if nombre is None:
-            error = 'El nombre es requerido'
+            return jsonify({'message': 'El nombre es requerido'}), 422
         if descripcion is None:
-            error = 'La descripción es requerida'
-            
-        if error is None:
-            categoria = db.session.get(Categoria, id)
-            if categoria:
-                try:
-                    categoria.nombre = nombre
-                    categoria.descripcion = descripcion
-                    db.session.commit()
-                    return jsonify({'message':'categoria modificada con exito'}, 200), 200
-                except IntegrityError:
-                    error = 'el nombre o la descripción ya existen' 
-                    return jsonify({'message':error}, 409), 409
-            else:     
-                error = 'categoria no encontrada'
-            
-        return jsonify({'message':error}, 404), 404
+            return jsonify({'message': 'La descripción es requerida'}), 422
+
+        categoria = db.session.get(Categoria, id)
+        if categoria is None:
+            return jsonify({'message': 'Categoria no encontrada'}), 404
+
+        try:
+            categoria.nombre = nombre
+            categoria.descripcion = descripcion
+            db.session.commit()
+            return jsonify({'message': 'Categoria modificada con exito'}), 200
+        except IntegrityError:
+            db.session.rollback()
+            return jsonify({'message': 'El nombre o la descripción ya existen'}), 409
+        
         
     @staticmethod
     def destroy(id) -> tuple[Response, int]:

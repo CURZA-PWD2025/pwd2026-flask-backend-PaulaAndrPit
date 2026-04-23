@@ -17,7 +17,7 @@ class ProveedorController (Controller):
         if len(proveedores_list) > 0:
             proveedores_to_dict = [proveedor.to_dict() for proveedor in proveedores_list ]
             return jsonify(proveedores_to_dict, 200), 200 
-        return jsonify({"message": 'proveedores no encontrados'}, 404), 404
+        return jsonify({"message": 'proveedores no encontrados'}), 404
     
 
     @staticmethod
@@ -25,7 +25,7 @@ class ProveedorController (Controller):
         proveedor = db.session.get(Proveedor, id)
         if proveedor:
             return jsonify(proveedor.to_dict(),200), 200
-        return jsonify({"message": 'proveedor no encontrado'}, 404), 404
+        return jsonify({"message": 'proveedor no encontrado'}), 404
     
     @staticmethod
     def create(request) -> tuple[Response, int]:
@@ -36,7 +36,7 @@ class ProveedorController (Controller):
         
         error :str | None = None
         if nombre is None:
-            error = 'El nombre es requerido'
+            error = jsonify({'message': 'El nombre es requerido'}), 422
         
             
         if error is None:
@@ -44,40 +44,37 @@ class ProveedorController (Controller):
                 proveedor = Proveedor(nombre=nombre, contacto=contacto, email=email, telefono=telefono)
                 db.session.add(proveedor)
                 db.session.commit()
-                return jsonify({'message': "proveedor creado con exito"}, 201), 201
+                return jsonify({'message': "proveedor creado con exito"}), 201
             except IntegrityError:
                 db.session.rollback()
-                return jsonify({'message': "Proveedor ya registrado"}, 409), 409
-        return jsonify ({'message': error}, 422), 422
+                return jsonify({'message': "Proveedor ya registrado"}), 409
+        return jsonify ({'message': error}), 422
         
         
     @staticmethod
-    def update(request, id)->tuple[Response, int]:
-        nombre:str = request.get['nombre']
-        contacto: str = request[('contacto')]
-        email: str = request[('email')]
-        telefono: str = request[('telefono')]
-        error :str | None = None
+    def update(request, id) -> tuple[Response, int]:    
+        nombre: str = request.get('nombre')
+        contacto: str = request.get('contacto')
+        email: str = request.get('email')
+        telefono: str = request.get('telefono')
+
         if nombre is None:
-            error = 'El nombre es requerido'
-                    
-        if error is None:
-            proveedor = db.session.get(Proveedor, id)
-            if proveedor:
-                try:
-                    proveedor.nombre = nombre
-                    proveedor.contacto = contacto
-                    proveedor.email = email
-                    proveedor.telefono = telefono
-                    db.session.commit()
-                    return jsonify({'message':'proveedor modificado con exito'}, 200), 200
-                except IntegrityError:
-                    error = 'el nombre ya existe' 
-                    return jsonify({'message':error}, 409), 409
-            else:     
-                error = 'proveedor no encontrado'
-            
-        return jsonify({'message':error}, 404), 404
+            return jsonify({'message': 'El nombre es requerido'}), 422
+
+        proveedor = db.session.get(Proveedor, id)
+        if proveedor is None:
+            return jsonify({'message': 'Proveedor no encontrado'}), 404
+
+        try:
+            proveedor.nombre = nombre
+            proveedor.contacto = contacto
+            proveedor.email = email
+            proveedor.telefono = telefono
+            db.session.commit()
+            return jsonify({'message': 'Proveedor modificado con exito'}), 200
+        except IntegrityError:
+            db.session.rollback()
+            return jsonify({'message': 'El nombre ya existe'}), 409
         
     @staticmethod
     def destroy(id) -> tuple[Response, int]:
@@ -86,7 +83,7 @@ class ProveedorController (Controller):
         if proveedor and len(proveedor.productos) == 0:
             db.session.delete(proveedor)
             db.session.commit()
-            return jsonify({'message':'el proveedor fue eliminado con exito'}, 200), 200
+            return jsonify({'message':'el proveedor fue eliminado con exito'}), 200
         else:
-            error = 'proveedor no encontrado o tiene productos asociados'
-        return jsonify({'message':error}, 409), 409
+            error = jsonify({'message': 'proveedor no encontrado o tiene productos asociados'}), 409
+        return error

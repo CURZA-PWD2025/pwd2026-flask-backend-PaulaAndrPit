@@ -14,11 +14,11 @@ class AuthController:
         
         error :str | None = None
         if nombre is None:
-            error = 'El nombre es requerido'
+            error = jsonify({'message': 'El nombre es requerido'}), 422
         if email is None:
-            error = 'El email es requerido'
+            error = jsonify({'message': 'El email es requerido'}), 422
         if password is None:
-            error = 'La contraseña es requerida'
+            error = jsonify({'message': 'La contraseña es requerida'}), 422
             
         if error is None:
             try:
@@ -33,7 +33,7 @@ class AuthController:
             except IntegrityError:
                 db.session.rollback()
                 return jsonify({'message': "Usuario ya registrado"}), 409
-        return jsonify ({'message': error}), 422
+        return error
     
     @staticmethod
     def login(request : dict  ) -> tuple[Response, int]:
@@ -43,9 +43,9 @@ class AuthController:
         
         error :str | None = None
         if nombre is None:
-            error = 'El nombre es requerido'
+            error = jsonify({'message': 'El nombre es requerido'}), 422
         if password is None:
-            error = 'La contraseña es requerida'
+            error = jsonify({'message': 'La contraseña es requerida'}), 422
             
         if error is None:
             user = db.session.execute(db.select(User).filter_by(nombre=nombre)).scalar_one_or_none()
@@ -53,4 +53,4 @@ class AuthController:
                 access_token = create_access_token(identity=str(user.id), additional_claims={'rol': user.rol.nombre if user.rol else None})
                 return jsonify({'access_token': access_token, 'rol': user.rol.nombre if user.rol else None, 'nombre': user.nombre}), 200
             return jsonify({'message': "Credenciales inválidas"}), 401
-        return jsonify ({'message': error}), 422
+        return error
